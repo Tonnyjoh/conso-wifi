@@ -24,6 +24,7 @@ data class AppSettings(
     /** Vrai si le dernier LOGIN a été refusé : plus aucun essai automatique avant une saisie (EC-3, évite le verrouillage). */
     val routerCredentialsRejected: Boolean = false,
     val hasPin: Boolean = false,
+    val biometricEnabled: Boolean = false,
     val onboardingDone: Boolean = false,
     val lastReminderDay: String = "",
     val lastOrangeOk: Long = 0L,
@@ -38,6 +39,7 @@ class SettingsStore(private val context: Context) {
         val routerAccount = stringPreferencesKey("router_account")
         val routerLoggedIn = booleanPreferencesKey("router_logged_in")
         val credsRejected = booleanPreferencesKey("router_creds_rejected")
+        val biometricEnabled = booleanPreferencesKey("biometric_enabled")
         val pinHash = stringPreferencesKey("pin_hash")
         val pinSalt = stringPreferencesKey("pin_salt")
         val pinFailures = intPreferencesKey("pin_failures")
@@ -56,6 +58,7 @@ class SettingsStore(private val context: Context) {
             routerLoggedIn = p[K.routerLoggedIn] ?: false,
             routerCredentialsRejected = p[K.credsRejected] ?: false,
             hasPin = !p[K.pinHash].isNullOrEmpty(),
+            biometricEnabled = p[K.biometricEnabled] ?: false,
             onboardingDone = p[K.onboardingDone] ?: false,
             lastReminderDay = p[K.lastReminderDay] ?: "",
             lastOrangeOk = p[K.lastOrangeOk] ?: 0L,
@@ -91,6 +94,8 @@ class SettingsStore(private val context: Context) {
     suspend fun setLastReminderDay(day: String) = edit { it[K.lastReminderDay] = day }
 
     suspend fun setLastOrangeOk(ts: Long) = edit { it[K.lastOrangeOk] = ts }
+
+    suspend fun setBiometricEnabled(on: Boolean) = edit { it[K.biometricEnabled] = on }
 
     suspend fun savePin(hash: String, saltBase64: String) = edit {
         it[K.pinHash] = hash

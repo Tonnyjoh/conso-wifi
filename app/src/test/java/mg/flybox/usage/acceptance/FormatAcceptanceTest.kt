@@ -57,11 +57,11 @@ class FormatAcceptanceTest {
         assertFalse(PinPolicy.verify("4822", salt, h))
     }
 
-    @Test fun `AC-2 PIN asked again only after more than 1 minute in background`() {
+    @Test fun `AC-2 PIN asked again only after more than 30 seconds in background`() {
         val t = 1_000_000L
-        assertFalse(PinPolicy.needsUnlock(t, t + 59_000))
-        assertFalse(PinPolicy.needsUnlock(t, t + 60_000))
-        assertTrue(PinPolicy.needsUnlock(t, t + 60_001))
+        assertFalse(PinPolicy.needsUnlock(t, t + 29_000))
+        assertFalse(PinPolicy.needsUnlock(t, t + 30_000))
+        assertTrue(PinPolicy.needsUnlock(t, t + 30_001))
         assertTrue("cold start must ask the PIN", PinPolicy.needsUnlock(null, t))
     }
 

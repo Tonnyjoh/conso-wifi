@@ -101,10 +101,21 @@ fun PinDots(count: Int, maxLen: Int = PinPolicy.MAX_LENGTH, error: Boolean = fal
 
 /** Écran de déverrouillage (AC-2). */
 @Composable
-fun LockScreen(ui: PinUi, onSubmit: (String) -> Unit, onTyping: () -> Unit, modifier: Modifier = Modifier) {
+fun LockScreen(
+    ui: PinUi,
+    onSubmit: (String) -> Unit,
+    onTyping: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** Non nul si l'empreinte est activée et disponible : proposée d'emblée, le PIN reste le repli. */
+    onBiometric: (() -> Unit)? = null,
+) {
     var pin by rememberSaveable { mutableStateOf("") }
     val locked = ui.lockSeconds > 0
     LaunchedEffect(ui.wrongAttempt, locked) { if (ui.wrongAttempt || locked) pin = "" }
+    var autoPrompted by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(onBiometric != null) {
+        if (onBiometric != null && !autoPrompted) { autoPrompted = true; onBiometric() }
+    }
     Column(
         modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -126,6 +137,9 @@ fun LockScreen(ui: PinUi, onSubmit: (String) -> Unit, onTyping: () -> Unit, modi
             onDelete = { pin = pin.dropLast(1) },
             onSubmit = { onSubmit(pin) },
         )
+        if (onBiometric != null) {
+            mg.flybox.usage.ui.components.TextAction("Utiliser l'empreinte", onBiometric)
+        }
     }
 }
 

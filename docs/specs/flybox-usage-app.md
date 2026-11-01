@@ -24,7 +24,7 @@ A standalone Android app (Kotlin, Jetpack Compose, no server of its own) used by
 
 ## Acceptance criteria (all testable)
 - AC-1: Given the app is first launched, when the user opens it, then an onboarding flow asks to create a 4 to 6 digit PIN, and the main screen is not reachable until it is confirmed.
-- AC-2: Given a PIN exists, when the app starts or returns from background after more than 1 minute, then the PIN screen is shown and 5 wrong attempts lock input for 30 seconds.
+- AC-2: Given a PIN exists, when the app starts or returns from background after more than 30 seconds, then the PIN screen is shown and 5 wrong attempts lock input for 30 seconds.
 - AC-3: Given the router is reachable, when the user enters the router login and password in Settings and confirms, then the app logs in to the router and shows "Connected"; with a wrong password it shows an explicit error and stores nothing.
 - AC-4: Given the router is reachable, when the dashboard loads, then it shows today's usage, the Orange remaining Go as a ring gauge with total and expiry date, and the network type and signal strength.
 - AC-5: Given at least two collected samples across midnight, when computing today's usage, then only the deltas after local midnight are counted (BR-2), including the counter-reset case.

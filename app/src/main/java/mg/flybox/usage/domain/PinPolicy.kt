@@ -12,11 +12,11 @@ object PinPolicy {
     const val MAX_LENGTH = 6
     const val MAX_ATTEMPTS = 5
     const val LOCK_SECONDS = 30
-    const val BACKGROUND_GRACE_MILLIS = 60_000L
+    const val BACKGROUND_GRACE_MILLIS = 30_000L
 
     fun isValidFormat(pin: String): Boolean = pin.length in MIN_LENGTH..MAX_LENGTH && pin.all { it in '0'..'9' }
 
-    /** Faut-il redemander le PIN après un retour d'arrière-plan ? (strictement plus d'une minute). */
+    /** Faut-il redemander le PIN après un retour d'arrière-plan ? (strictement plus de 30 secondes). */
     fun needsUnlock(backgroundedAt: Long?, now: Long): Boolean =
         backgroundedAt == null || now - backgroundedAt > BACKGROUND_GRACE_MILLIS
 

@@ -34,9 +34,9 @@ class PinPolicyTest {
         assertEquals(0, st.failures)
     }
 
-    @Test fun unlockRequiredAfterMoreThanOneMinute() {
-        assertFalse(PinPolicy.needsUnlock(100_000, 100_000 + 60_000))
-        assertTrue(PinPolicy.needsUnlock(100_000, 100_000 + 60_001))
+    @Test fun unlockRequiredAfterMoreThan30Seconds() {
+        assertFalse(PinPolicy.needsUnlock(100_000, 100_000 + 30_000))
+        assertTrue(PinPolicy.needsUnlock(100_000, 100_000 + 30_001))
         assertTrue(PinPolicy.needsUnlock(null, 5))
     }
 }

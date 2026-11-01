@@ -2,7 +2,7 @@ package mg.flybox.usage
 
 import android.os.Bundle
 import android.provider.Settings
-import androidx.activity.ComponentActivity
+import androidx.fragment.app.FragmentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
@@ -57,6 +57,7 @@ import mg.flybox.usage.ui.components.Glyph
 import mg.flybox.usage.ui.components.GlyphKind
 import mg.flybox.usage.ui.components.Hairline
 import mg.flybox.usage.ui.components.flyClickable
+import mg.flybox.usage.ui.Biometrics
 import mg.flybox.usage.ui.screens.AppsScreen
 import mg.flybox.usage.ui.screens.DevicesScreen
 import mg.flybox.usage.ui.screens.HistoryScreen
@@ -68,7 +69,7 @@ import mg.flybox.usage.ui.theme.FlyboxTheme
 import mg.flybox.usage.ui.theme.Palette
 import mg.flybox.usage.ui.theme.Type
 
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
@@ -111,7 +112,18 @@ private fun Root() {
         when (phase) {
             AppPhase.Loading -> {}
             AppPhase.Onboarding -> OnboardingScreen(onCreate = { main.createPin(it) })
-            AppPhase.Locked -> LockScreen(pin, onSubmit = main::tryUnlock, onTyping = main::clearWrong)
+            AppPhase.Locked -> {
+                val ctx = LocalContext.current
+                val settingsVm: SettingsViewModel = viewModel()
+                val st by settingsVm.settings.collectAsStateWithLifecycle()
+                val canBio = st.biometricEnabled && remember { Biometrics.isAvailable(ctx) }
+                LockScreen(
+                    pin, onSubmit = main::tryUnlock, onTyping = main::clearWrong,
+                    onBiometric = if (canBio) {
+                        { (ctx as? FragmentActivity)?.let { Biometrics.prompt(it, "Déverrouiller Conso Flybox", onSuccess = main::unlockWithBiometric) } }
+                    } else null,
+                )
+            }
             AppPhase.Unlocked -> MainScaffold(main)
         }
     }
@@ -172,6 +184,13 @@ private fun MainScaffold(main: MainViewModel) {
                         onReminder = settingsVm::setReminder,
                         onAlwaysGo = settingsVm::setAlwaysGo,
                         onChangePin = { o, n -> main.changePin(o, n) },
+                        biometricAvailable = remember { Biometrics.isAvailable(ctx) },
+                        onBiometric = { on ->
+                            if (!on) settingsVm.setBiometricEnabled(false)
+                            else (ctx as? FragmentActivity)?.let {
+                                Biometrics.prompt(it, "Activer l'empreinte", onSuccess = { settingsVm.setBiometricEnabled(true) })
+                            }
+                        },
                     )
                 }
             }

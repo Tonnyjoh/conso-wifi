@@ -136,6 +136,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Empreinte reconnue : même effet qu'un PIN correct, y compris la remise à zéro des échecs. */
+    fun unlockWithBiometric() {
+        if (_phase.value != AppPhase.Locked) return
+        viewModelScope.launch {
+            c.settings.setPinLockState(PinLockState())
+            countdown?.cancel()
+            _pin.value = PinUi()
+            ringPending = true
+            _phase.value = AppPhase.Unlocked
+        }
+    }
+
     fun clearWrong() { _pin.update { it.copy(wrongAttempt = false) } }
 
     /** Changement de PIN : vérifie l'ancien puis enregistre le nouveau. Retourne vrai si réussi. */
@@ -329,6 +341,8 @@ class SettingsViewModel(app: Application) : AndroidViewModel(app) {
     private val login = MutableStateFlow<LoginUi>(LoginUi.Idle)
     val loginUi: StateFlow<LoginUi> = login.asStateFlow()
     val settings: StateFlow<AppSettings> = c.settings.settings.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), AppSettings())
+
+    fun setBiometricEnabled(on: Boolean) { viewModelScope.launch { c.settings.setBiometricEnabled(on) } }
 
     fun connect(account: String, password: String) {
         if (account.isBlank() || password.isEmpty()) { login.value = LoginUi.Failed("Saisissez l'identifiant et le mot de passe du routeur."); return }

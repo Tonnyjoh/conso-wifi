@@ -64,6 +64,8 @@ fun SettingsScreen(
     onReminder: (Boolean, Int) -> Unit,
     onAlwaysGo: (Boolean) -> Unit,
     onChangePin: suspend (String, String) -> Boolean,
+    biometricAvailable: Boolean,
+    onBiometric: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var account by rememberSaveable(settings.routerAccount) { mutableStateOf(settings.routerAccount.ifBlank { "admin" }) }
@@ -128,7 +130,10 @@ fun SettingsScreen(
         // Code
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text("Code de verrouillage", style = Type.Section, color = Palette.Ink)
-            Text("Le code est demandé à l'ouverture et après plus d'une minute en arrière-plan.", style = Type.Body, color = Palette.InkSecondary)
+            Text("Le code est demandé à l'ouverture et après plus de 30 secondes en arrière-plan.", style = Type.Body, color = Palette.InkSecondary)
+            if (biometricAvailable) {
+                SwitchRow("Déverrouiller avec l'empreinte", settings.biometricEnabled, onBiometric)
+            }
             TextAction("Changer le code", { showPinDialog = true })
         }
         Hairline()
