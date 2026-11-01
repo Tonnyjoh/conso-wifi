@@ -1,0 +1,138 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "6f865982a9bfe42777494efb84b7eedc",
+    "entities": [
+      {
+        "tableName": "samples",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ts` INTEGER NOT NULL, `down` INTEGER NOT NULL, `up` INTEGER NOT NULL, `down_rate` INTEGER NOT NULL, `up_rate` INTEGER NOT NULL, `online_time` INTEGER NOT NULL, `net` TEXT, `rsrp` INTEGER, `rssi` INTEGER, `sinr` REAL, PRIMARY KEY(`ts`))",
+        "fields": [
+          {
+            "fieldPath": "ts",
+            "columnName": "ts",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "down",
+            "columnName": "down",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "up",
+            "columnName": "up",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "downRate",
+            "columnName": "down_rate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "upRate",
+            "columnName": "up_rate",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "onlineTime",
+            "columnName": "online_time",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "net",
+            "columnName": "net",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rsrp",
+            "columnName": "rsrp",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "rssi",
+            "columnName": "rssi",
+            "affinity": "INTEGER",
+            "notNull": false
+          },
+          {
+            "fieldPath": "sinr",
+            "columnName": "sinr",
+            "affinity": "REAL",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ts"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "orange",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ts` INTEGER NOT NULL, `remaining_go` REAL NOT NULL, `total_go` REAL NOT NULL, `expires` TEXT NOT NULL, `plan` TEXT NOT NULL, `balance_ar` INTEGER, PRIMARY KEY(`ts`))",
+        "fields": [
+          {
+            "fieldPath": "ts",
+            "columnName": "ts",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "remainingGo",
+            "columnName": "remaining_go",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "totalGo",
+            "columnName": "total_go",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "expires",
+            "columnName": "expires",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "plan",
+            "columnName": "plan",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "balanceAr",
+            "columnName": "balance_ar",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ts"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6f865982a9bfe42777494efb84b7eedc')"
+    ]
+  }
+}

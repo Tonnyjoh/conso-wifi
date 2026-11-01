@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- EC-5 : HTTP en clair autorisé uniquement vers le routeur et la page Orange. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">192.168.1.1</domain>
+        <domain includeSubdomains="false">123.orange.mg</domain>
+    </domain-config>
+</network-security-config>
