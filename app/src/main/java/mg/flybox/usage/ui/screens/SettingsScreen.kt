@@ -194,7 +194,7 @@ private fun SwitchRow(label: String, checked: Boolean, onChange: (Boolean) -> Un
         Switch(
             checked = checked, onCheckedChange = onChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = Palette.Ink, checkedTrackColor = Palette.Brand, checkedBorderColor = Palette.Brand,
+                checkedThumbColor = Palette.OnBrand, checkedTrackColor = Palette.Brand, checkedBorderColor = Palette.Brand,
                 uncheckedThumbColor = Palette.InkSecondary, uncheckedTrackColor = Palette.SurfaceMuted, uncheckedBorderColor = Palette.InkSecondary,
             ),
         )
@@ -213,7 +213,7 @@ private fun Stepper(value: String, onMinus: () -> Unit, onPlus: () -> Unit) {
 @Composable
 private fun StepButton(sign: String, description: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(48.dp).background(Palette.OrangeSoft, androidx.compose.foundation.shape.CircleShape)
+        Modifier.size(48.dp).background(Palette.AccentSoft, androidx.compose.foundation.shape.CircleShape)
             .flyClickable(onClick, shape = androidx.compose.foundation.shape.CircleShape)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,

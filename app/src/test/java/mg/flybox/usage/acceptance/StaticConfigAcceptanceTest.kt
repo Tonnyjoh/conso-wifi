@@ -36,7 +36,12 @@ class StaticConfigAcceptanceTest {
 
     @Test fun `AC-14 partial accent color and Montserrat font resource present, no dark theme switch`() {
         val theme = f("java/mg/flybox/usage/ui/theme/Theme.kt").readText()
-        assertTrue(theme.contains("0xFFFF7900", ignoreCase = true))
+        assertTrue("theme accent must be cobalt blue #2459D6", theme.contains("0xFF2459D6", ignoreCase = true))
+        val colors = f("res/values/colors.xml").readText()
+        assertTrue("colors.xml must declare #2459D6", colors.contains("#2459D6", ignoreCase = true))
+        val stale = File(f("").path).walkTopDown().filter { it.isFile && it.extension in setOf("kt", "xml") }
+            .filter { Regex("(#|0xFF)FF7900", RegexOption.IGNORE_CASE).containsMatchIn(it.readText()) }.map { it.path }.toList()
+        assertTrue("leftover old orange #FF7900 in: $stale", stale.isEmpty())
         assertTrue(File(f("res/font/montserrat.ttf").path).exists())
         assertTrue("dark theme must not be used", !theme.contains("isSystemInDarkTheme") && !theme.contains("darkColorScheme"))
     }

@@ -64,7 +64,7 @@ object Notifications {
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(open)
             .setAutoCancel(true)
-            .setColor(0xFFFF7900.toInt())
+            .setColor(0xFF2459D6.toInt())
             .build()
         NotificationManagerCompat.from(context).notify(NOTIF_ID, n)
     }

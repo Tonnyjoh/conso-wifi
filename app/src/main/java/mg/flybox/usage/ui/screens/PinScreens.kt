@@ -90,7 +90,7 @@ fun PinDots(count: Int, maxLen: Int = PinPolicy.MAX_LENGTH, error: Boolean = fal
                     when {
                         error -> Palette.Red
                         i < count -> Palette.Brand
-                        else -> Palette.OrangeSoft
+                        else -> Palette.AccentSoft
                     },
                     CircleShape,
                 ).border(1.5.dp, Palette.InkSecondary, CircleShape),

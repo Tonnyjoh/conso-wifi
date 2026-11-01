@@ -16,21 +16,21 @@ import mg.flybox.usage.R
 
 /** Jetons de couleur du brief de design. Thème clair uniquement. */
 object Palette {
-    val Brand = Color(0xFFFF7900)
-    val OnBrand = Color(0xFF231A12)
-    val OrangeText = Color(0xFFB34B00)
-    val OrangeSoft = Color(0xFFFFE3CC)
-    val Background = Color(0xFFFFF8F1)
+    val Brand = Color(0xFF2459D6)
+    val OnBrand = Color(0xFFFFFFFF)
+    val AccentText = Color(0xFF1A46AD)
+    val AccentSoft = Color(0xFFDCE6FB)
+    val Background = Color(0xFFF6F8FC)
     val Surface = Color(0xFFFFFFFF)
-    val SurfaceMuted = Color(0xFFF6EDE3)
-    val Ink = Color(0xFF231A12)
-    val InkSecondary = Color(0xFF6A5D52)
-    val Hairline = Color(0xFFE8DACB)
+    val SurfaceMuted = Color(0xFFEEF1F8)
+    val Ink = Color(0xFF14213D)
+    val InkSecondary = Color(0xFF5A6478)
+    val Hairline = Color(0xFFDCE2EF)
     val Green = Color(0xFF1E7A4C)
     val GreenSoft = Color(0xFFE2F3E9)
     val Red = Color(0xFFBF2F1B)
     val RedSoft = Color(0xFFFCE4DF)
-    val CurveInk = Color(0xFF4A3A2E)
+    val CurveInk = Color(0xFF5F6F94)
 }
 
 @OptIn(ExperimentalTextApi::class)
@@ -71,9 +71,9 @@ private val flyboxTypography = Typography(
 private val colors = lightColorScheme(
     primary = Palette.Brand,
     onPrimary = Palette.OnBrand,
-    primaryContainer = Palette.OrangeSoft,
+    primaryContainer = Palette.AccentSoft,
     onPrimaryContainer = Palette.Ink,
-    secondary = Palette.OrangeText,
+    secondary = Palette.AccentText,
     background = Palette.Background,
     onBackground = Palette.Ink,
     surface = Palette.Surface,

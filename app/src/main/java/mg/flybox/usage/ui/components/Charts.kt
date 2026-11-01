@@ -78,7 +78,7 @@ fun RingGauge(
             val inset = stroke / 2
             val arcSize = Size(size.width - stroke, size.height - stroke)
             val topLeft = Offset(inset, inset)
-            drawCircle(Palette.OrangeSoft, radius = arcSize.width / 2, style = Stroke(stroke))
+            drawCircle(Palette.AccentSoft, radius = arcSize.width / 2, style = Stroke(stroke))
             val shown = (progress.coerceIn(0f, 1f) * revealFraction.coerceIn(0f, 1f))
             if (shown > 0.001f) {
                 drawArc(Palette.Brand, -90f, shown * 360f, false, topLeft, arcSize, style = Stroke(stroke, cap = StrokeCap.Round))
@@ -319,7 +319,7 @@ fun ThroughputChart(points: List<RatePoint>, modifier: Modifier = Modifier) {
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LegendItem("Descendant", Palette.Brand, 2.5.dp, Palette.OrangeText)
+            LegendItem("Descendant", Palette.Brand, 2.5.dp, Palette.AccentText)
             LegendItem("Montant", Palette.CurveInk, 2.dp, Palette.CurveInk)
         }
         Box(Modifier.fillMaxWidth().height(180.dp).semantics { contentDescription = summary }) {
@@ -357,7 +357,7 @@ fun ThroughputChart(points: List<RatePoint>, modifier: Modifier = Modifier) {
                 drawCircle(Color.White, 6.dp.toPx(), Offset(xs[last], yd[last]))
                 drawCircle(Palette.Brand, 4.dp.toPx(), Offset(xs[last], yd[last]))
                 // Valeur finale dans la marge de droite, hors de la courbe.
-                val lbl = measurer.measure(lastLabel, Type.Caption.copy(color = Palette.OrangeText))
+                val lbl = measurer.measure(lastLabel, Type.Caption.copy(color = Palette.AccentText))
                 drawText(lbl, topLeft = Offset(size.width - rightPx + 8.dp.toPx(), (yd[last] - lbl.size.height / 2f).coerceIn(0f, padT + h - lbl.size.height)))
                 // Axe du temps : début, milieu, fin.
                 listOf(0, last / 2, last).distinct().forEach { i ->

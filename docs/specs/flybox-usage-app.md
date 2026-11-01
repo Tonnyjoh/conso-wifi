@@ -40,7 +40,7 @@ A standalone Android app (Kotlin, Jetpack Compose, no server of its own) used by
 - AC-16: Given the permission is granted, when the Apps screen opens, then it lists this phone's apps ranked by data used (horizontal bars with app icon and name) for the selected period (today, 7 days, 30 days), with a note that the figures concern this phone only.
 - AC-17: Given the router returns per-device traffic (`AIRTEL_GET_DEVICE_INFO_TRAFFIC` non empty after login), when the Devices screen opens, then each device shows its data used and the list can be sorted by usage, with a share-of-total bar.
 - AC-18: Given the router returns no per-device traffic, when the Devices screen opens, then no per-device figure is shown and the screen says so once in a discreet note instead of showing zeros.
-- AC-14: Given the app interface, then all text is in French, the theme is light, the font is Montserrat and the accent color is #ff7900.
+- AC-14: Given the app interface, then all text is in French, the theme is light, the font is Montserrat and the accent color is cobalt blue #2459D6.
 
 ## Error and edge cases
 - EC-1: Router returns empty values for fields requiring a session (for example monthly counters): the app treats them as unavailable and relies on `system_status`.
@@ -51,7 +51,7 @@ A standalone Android app (Kotlin, Jetpack Compose, no server of its own) used by
 - EC-6: Another user is logged in on the router ("account already in use"): the app shows that message and retries later without locking the account.
 
 ## Interface
-Bottom navigation with five screens, large friendly visuals, light theme, Montserrat, accent #ff7900.
+Bottom navigation with five screens, large friendly visuals, light theme, Montserrat, accent cobalt blue #2459D6.
 - Home: ring gauge of remaining plan, today's usage, banner (green/red), 30 day prediction, signal chip.
 - History: bar chart 7/30 days, tap for value, line of recent throughput.
 - Devices: list of online devices (with per-device usage when the router provides it), muted list of offline ones.

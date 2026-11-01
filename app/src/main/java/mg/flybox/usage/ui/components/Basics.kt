@@ -108,7 +108,7 @@ fun TextAction(text: String, onClick: () -> Unit, modifier: Modifier = Modifier)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = Type.Label, color = Palette.OrangeText, maxLines = 1, softWrap = false)
+        Text(text, style = Type.Label, color = Palette.AccentText, maxLines = 1, softWrap = false)
     }
 }
 
@@ -140,7 +140,8 @@ fun SegmentedPills(options: List<String>, selected: Int, onSelect: (Int) -> Unit
                 modifier = Modifier
                     .weight(1f)
                     .heightIn(min = 48.dp)
-                    .background(if (on) Palette.OrangeSoft else Color.Transparent, CircleShape)
+                    .background(if (on) Palette.AccentSoft else Color.Transparent, CircleShape)
+                    .then(if (on) Modifier.border(1.5.dp, Palette.Brand, CircleShape) else Modifier)
                     .flyClickable({ onSelect(i) }, role = Role.RadioButton, shape = CircleShape)
                     .padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center,

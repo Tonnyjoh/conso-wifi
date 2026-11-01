@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -205,7 +206,7 @@ private fun BottomBarContent(selected: Int, onSelect: (Int) -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterVertically),
                 ) {
                     Box(
-                        Modifier.background(if (on) Palette.OrangeSoft else Color.Transparent, RoundedCornerShape(50)).padding(horizontal = 14.dp, vertical = 4.dp),
+                        Modifier.background(if (on) Palette.AccentSoft else Color.Transparent, RoundedCornerShape(50)).then(if (on) Modifier.border(1.5.dp, Palette.Brand, RoundedCornerShape(50)) else Modifier).padding(horizontal = 14.dp, vertical = 4.dp),
                     ) { Glyph(t.glyph, Palette.Ink, 24) }
                     Text(
                         t.label,

@@ -21,7 +21,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import mg.flybox.usage.domain.Formats
-import mg.flybox.usage.domain.KnownDevice
+import mg.flybox.usage.domain.OfflineGroup
+import mg.flybox.usage.domain.OfflineGrouping
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import mg.flybox.usage.domain.OnlineDevice
 import mg.flybox.usage.domain.Units
 import mg.flybox.usage.ui.DevicesUi
@@ -96,10 +102,16 @@ private fun DevicesList(ui: DevicesUi.Ready, alwaysGo: Boolean, onToggleSort: ()
         if (!ui.hasTraffic) {
             Text("Le routeur ne fournit pas l'usage par appareil.", style = Type.Caption, color = Palette.InkSecondary)
         }
-        if (ui.lists.offline.isNotEmpty()) {
+        val groups = remember(ui.lists) { OfflineGrouping.group(ui.lists.offline, ui.lists.online) }
+        if (groups.isNotEmpty()) {
+            var expanded by rememberSaveable { mutableStateOf(false) }
+            val shown = if (expanded) groups else groups.take(OFFLINE_FOLDED)
             Spacer(Modifier.height(12.dp))
             Text("Hors ligne", style = Type.Section, color = Palette.InkSecondary)
-            ui.lists.offline.forEach { OfflineRow(it); Hairline() }
+            shown.forEach { OfflineRow(it); Hairline() }
+            if (groups.size > OFFLINE_FOLDED) {
+                TextAction(if (expanded) "Réduire" else "Voir tout (${groups.size})", { expanded = !expanded })
+            }
         }
     }
 }
@@ -128,15 +140,18 @@ private fun OnlineRow(d: OnlineDevice, bytes: Long?, total: Long, maxUse: Long, 
 }
 
 @Composable
-private fun OfflineRow(d: KnownDevice) {
+private fun OfflineRow(g: OfflineGroup) {
+    val d = g.representative
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Glyph(GlyphKind.Device, Palette.InkSecondary, 24)
         Column(Modifier.weight(1f)) {
-            Text(d.name, style = Type.RowValue, color = Palette.InkSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(d.mac, style = Type.Caption, color = Palette.InkSecondary, maxLines = 1)
+            Text(g.name, style = Type.RowValue, color = Palette.InkSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(if (g.addressCount > 1) "${g.addressCount} adresses" else d.mac, style = Type.Caption, color = Palette.InkSecondary, maxLines = 1)
         }
     }
 }
+
+private const val OFFLINE_FOLDED = 5

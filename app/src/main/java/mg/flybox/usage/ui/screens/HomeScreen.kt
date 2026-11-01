@@ -82,7 +82,7 @@ private fun HeaderRow(ui: HomeUi, data: DashboardData?, onRefresh: () -> Unit) {
                 StatusChip(
                     Signal.chipText(s.network, s.rsrp),
                     lead = { Glyph(GlyphKind.Signal, Palette.Ink, 16, signalLevel = Signal.level(s.rsrp)) },
-                    background = Palette.OrangeSoft,
+                    background = Palette.AccentSoft,
                 )
             }
         }
