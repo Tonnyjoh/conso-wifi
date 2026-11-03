@@ -156,7 +156,7 @@ private fun MainScaffold(main: MainViewModel) {
                     val vm: DevicesViewModel = viewModel()
                     val ui by vm.ui.collectAsStateWithLifecycle()
                     LaunchedEffect(Unit) { vm.load() }
-                    DevicesScreen(ui, settings.alwaysGo, reduced, onOpenSettings = { tab = Tab.Settings.ordinal }, onRetry = vm::load, onToggleSort = vm::toggleSort)
+                    DevicesScreen(ui, settings.alwaysGo, reduced, onOpenSettings = { tab = Tab.Settings.ordinal }, onRetry = vm::load, onToggleSort = vm::toggleSort, onSetBlocked = vm::setBlocked)
                 }
                 Tab.Apps -> {
                     val vm: AppsViewModel = viewModel()

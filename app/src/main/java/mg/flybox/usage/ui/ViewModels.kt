@@ -261,7 +261,7 @@ sealed interface DevicesUi {
     data object NotLoggedIn : DevicesUi
     data object Unreachable : DevicesUi
     data object AccountInUse : DevicesUi
-    data class Ready(val lists: DeviceLists, val traffic: Map<String, Long>, val totalTraffic: Long, val sortByUsage: Boolean, val hasTraffic: Boolean) : DevicesUi
+    data class Ready(val lists: DeviceLists, val traffic: Map<String, Long>, val totalTraffic: Long, val sortByUsage: Boolean, val hasTraffic: Boolean, val ownIp: String? = null, val busyMac: String? = null, val notice: String? = null) : DevicesUi
 }
 
 class DevicesViewModel(app: Application) : AndroidViewModel(app) {
@@ -285,7 +285,40 @@ class DevicesViewModel(app: Application) : AndroidViewModel(app) {
     private fun toReady(lists: DeviceLists, traffic: List<DeviceTraffic>): DevicesUi.Ready {
         val byMac = traffic.mapNotNull { t -> t.mac?.let { it to t.totalBytes } }.toMap()
         val total = byMac.values.sum()
-        return DevicesUi.Ready(lists, byMac, total, sort, hasTraffic = byMac.isNotEmpty() && total > 0)
+        return DevicesUi.Ready(lists, byMac, total, sort, hasTraffic = byMac.isNotEmpty() && total > 0, ownIp = ownWifiIp())
+    }
+
+    /** Adresse IPv4 de ce téléphone sur le Wi-Fi : sert à interdire le blocage de soi-même. */
+    private fun ownWifiIp(): String? = try {
+        java.net.NetworkInterface.getNetworkInterfaces().toList()
+            .flatMap { it.inetAddresses.toList() }
+            .firstOrNull { it is java.net.Inet4Address && it.isSiteLocalAddress }?.hostAddress
+    } catch (_: java.net.SocketException) {
+        null
+    }
+
+    /** Bloque ou débloque un appareil après confirmation de l'utilisateur, puis relit la liste. */
+    fun setBlocked(device: mg.flybox.usage.domain.OnlineDevice?, mac: String, blocked: Boolean) {
+        val ready = _ui.value as? DevicesUi.Ready ?: return
+        if (ready.busyMac != null) return
+        if (blocked && device != null && device.ip.isNotEmpty() && device.ip == ready.ownIp) return
+        _ui.value = ready.copy(busyMac = mac, notice = null)
+        viewModelScope.launch {
+            val notice = when (c.routerSession.setDeviceBlocked(mac, blocked)) {
+                mg.flybox.usage.data.RouterSession.BlockOutcome.Done -> null
+                mg.flybox.usage.data.RouterSession.BlockOutcome.Failed -> "Le routeur a refusé la commande."
+                mg.flybox.usage.data.RouterSession.BlockOutcome.NotLoggedIn -> "Connexion au routeur nécessaire."
+                mg.flybox.usage.data.RouterSession.BlockOutcome.Unreachable -> "Routeur injoignable."
+            }
+            val r = c.routerSession.devices()
+            val applied = (r as? DevicesResult.Ready)?.lists?.let { l ->
+                val now = l.online.firstOrNull { it.mac == mac }?.internetEnabled ?: l.offline.firstOrNull { it.mac == mac }?.internetEnabled
+                now == null || now == !blocked
+            } ?: true
+            val finalNotice = notice ?: if (!applied) "Le routeur a répondu mais l'état de l'appareil n'a pas changé." else null
+            _ui.value = if (r is DevicesResult.Ready) toReady(r.lists, r.traffic).copy(notice = finalNotice)
+            else ready.copy(busyMac = null, notice = notice ?: "Liste non actualisée.")
+        }
     }
 
     fun toggleSort() {

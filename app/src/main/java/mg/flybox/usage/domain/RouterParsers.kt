@@ -71,6 +71,7 @@ object RouterParsers {
                 mac = (d.str("macAddress") ?: "").uppercase(),
                 ip = d.str("ip") ?: "",
                 online = d.str("isOnline") == "1",
+                internetEnabled = d.str("enable") != "0",
             )
         }
     }
@@ -79,7 +80,8 @@ object RouterParsers {
     fun mergeDevices(online: List<OnlineDevice>, known: List<KnownDevice>): DeviceLists {
         val onlineMacs = online.map { it.mac }.toSet()
         val offline = known.filter { !it.online && it.mac !in onlineMacs }
-        return DeviceLists(online, offline)
+        val blockedMacs = known.filter { !it.internetEnabled }.map { it.mac }.toSet()
+        return DeviceLists(online.map { it.copy(internetEnabled = it.mac !in blockedMacs) }, offline)
     }
 
     private val macKeys = listOf("mac", "macAddress", "mac_addr", "MacAddress", "MACAddress", "mac_address")
@@ -129,6 +131,33 @@ object RouterParsers {
             }
         }
         return if (found) sum else null
+    }
+
+    /** Adresse MAC telle que deviceList_manage la renvoie (casse d'origine), ou null si l'appareil n'y figure pas. */
+    fun rawMacFor(body: String, mac: String): String? {
+        val a = array(body, "deviceList_manage") ?: return null
+        for (i in 0 until a.length()) {
+            val raw = a.optJSONObject(i)?.str("macAddress") ?: continue
+            if (raw.equals(mac, ignoreCase = true)) return raw
+        }
+        return null
+    }
+
+    /** get_token : {"token":"..."}. Le client web envoie ensuite CSRFToken = sha256(token) avec chaque écriture. */
+    fun token(body: String): String? {
+        val o = try { JSONObject(body) } catch (_: JSONException) { return null }
+        return o.str("token")
+    }
+
+    /** SHA-256 en hexadécimal minuscule, comme la bibliothèque du client web. */
+    fun csrfToken(token: String): String =
+        java.security.MessageDigest.getInstance("SHA-256").digest(token.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+
+    /** Réponse d'une commande d'écriture : {"result":"success"}. */
+    fun isSuccess(body: String): Boolean {
+        val o = try { JSONObject(body) } catch (_: JSONException) { return false }
+        return o.str("result") == "success"
     }
 
     /** Résultat d'un LOGIN : {"result":"0","cookie":"...","power":"3"}. */

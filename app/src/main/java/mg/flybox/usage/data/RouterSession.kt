@@ -89,6 +89,26 @@ class RouterSession(
         }
     }
 
+    /** Résultat de [setDeviceBlocked]. */
+    enum class BlockOutcome { Done, Failed, NotLoggedIn, Unreachable }
+
+    /** Bloque (Internet coupé) ou débloque un appareil. Une ré-authentification silencieuse au plus. */
+    suspend fun setDeviceBlocked(mac: String, blocked: Boolean): BlockOutcome = mutex.withLock {
+        val s = settings.current()
+        if (s.routerAccount.isBlank() || !secrets.hasPassword() || s.routerCredentialsRejected) return BlockOutcome.NotLoggedIn
+        try {
+            // La commande d'écriture ne signale pas la session expirée : on la vérifie par une lecture.
+            try {
+                router.deviceLists()
+            } catch (_: RouterSessionRequiredException) {
+                if (!silentLogin()) return BlockOutcome.NotLoggedIn
+            }
+            if (router.setDeviceInternet(mac, enabled = !blocked)) BlockOutcome.Done else BlockOutcome.Failed
+        } catch (_: RouterUnreachableException) {
+            BlockOutcome.Unreachable
+        }
+    }
+
     private suspend fun ready(): DevicesResult.Ready {
         val lists = router.deviceLists()
         val traffic = try { router.deviceTraffic() } catch (_: IOException) { emptyList() }

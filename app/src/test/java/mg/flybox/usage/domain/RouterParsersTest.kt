@@ -85,4 +85,22 @@ class RouterParsersTest {
         assertEquals("FR0296", RouterParsers.customerCode("""{"tz_customer_code":"FR0296"}"""))
         assertEquals(3 to 300, RouterParsers.loginAttempts("""{"psw_fail_num_str":"3","login_lock_time":"300"}"""))
     }
+
+    @Test fun blockedStateComesFromEnableField() {
+        val known = RouterParsers.deviceListManage(
+            """{"deviceList_manage":[{"deviceName":"A","macAddress":"aa:bb","isOnline":"1","ip":"192.168.1.5","enable":"0"},
+               {"deviceName":"B","macAddress":"cc:dd","isOnline":"0","ip":"","enable":"1"}]}""",
+        )
+        assertEquals(false, known[0].internetEnabled)
+        assertEquals(true, known[1].internetEnabled)
+        val online = listOf(OnlineDevice("A", "192.168.1.5", "AA:BB", null))
+        val merged = RouterParsers.mergeDevices(online, known)
+        assertEquals(false, merged.online.single().internetEnabled)
+    }
+
+    @Test fun isSuccessOnlyForSuccessResult() {
+        assertTrue(RouterParsers.isSuccess("""{"result":"success"}"""))
+        assertEquals(false, RouterParsers.isSuccess("""{"result":"failure"}"""))
+        assertEquals(false, RouterParsers.isSuccess("pas du json"))
+    }
 }

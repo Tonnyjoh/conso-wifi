@@ -44,8 +44,9 @@ class MemoryCookieJar : CookieJar {
 }
 
 /**
- * Client du routeur Flybox (CP02). Lecture seule hormis l'ouverture et la fermeture de session :
- * aucun goformId qui modifie des réglages n'est jamais envoyé.
+ * Client du routeur Flybox (CP02). Lecture seule hormis l'ouverture et la fermeture de session et
+ * [setDeviceInternet] (interrupteur Internet d'un appareil, comme l'écran Appareils du routeur) :
+ * aucun autre goformId qui modifie des réglages n'est envoyé.
  * Un mot de passe n'apparaît jamais dans un message d'erreur ni un journal.
  */
 class RouterClient(
@@ -151,10 +152,28 @@ class RouterClient(
         return RouterParsers.mergeDevices(RouterParsers.stationList(stations), RouterParsers.deviceListManage(known))
     }
 
+    /**
+     * Coupe ou rétablit Internet pour un appareil (goformId ORANGE_SET_DEVICE_SWITCH, enable 0/1).
+     * Action explicite de l'utilisateur seulement. Vrai si le routeur répond "success".
+     */
+    suspend fun setDeviceInternet(mac: String, enabled: Boolean): Boolean {
+        // Le routeur peut comparer l'adresse avec sa casse d'origine : on reprend celle de sa liste.
+        val sent = RouterParsers.rawMacFor(get("deviceList_manage"), mac) ?: mac
+        val form = FormBody.Builder().add("isTest", "false").add("goformId", "ORANGE_SET_DEVICE_SWITCH")
+            .add("macAddress", sent).add("enable", if (enabled) "1" else "0")
+        // Les écritures exigent un CSRFToken : sha256 du jeton de get_token (get_token_identity pour certains codes client).
+        val customer = RouterParsers.customerCode(get("tz_customer_code"))
+        val tokenCmd = if (customer in IDENTITY_TOKEN_CUSTOMERS) "get_token_identity" else "get_token"
+        RouterParsers.token(get(tokenCmd))?.let { form.add("CSRFToken", RouterParsers.csrfToken(it)) }
+        val reply = post(form.build())
+        return RouterParsers.isSuccess(reply)
+    }
+
     /** Trafic par appareil. Vide si le routeur ne le fournit pas (AC-18). Lecture seule. */
     suspend fun deviceTraffic(): List<DeviceTraffic> = RouterParsers.deviceTraffic(get("AIRTEL_GET_DEVICE_INFO_TRAFFIC"))
 
     companion object {
         const val DEFAULT_BASE = "http://192.168.1.1"
+        private val IDENTITY_TOKEN_CUSTOMERS = setOf("MA0553", "EG0657_common_encryption", "IO250013_common_encryption", "CMR510_common_encryption")
     }
 }

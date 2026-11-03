@@ -164,4 +164,32 @@ class RouterClientTest {
         assertEquals(3.0, o.fetch()!!.remainingGo, 1e-9)
         assertNull(o.fetch())
     }
+
+    @Test fun setDeviceInternetSendsSwitchCommand() = runBlocking {
+        server.enqueue(MockResponse().setBody("""{"deviceList_manage":[{"macAddress":"aa:bb:cc:dd:ee:ff","deviceName":"X"}]}"""))
+        server.enqueue(MockResponse().setBody("""{"tz_customer_code":"FR0296"}"""))
+        server.enqueue(MockResponse().setBody("""{"token":"abc"}"""))
+        server.enqueue(MockResponse().setBody("""{"result":"success"}"""))
+        assertTrue(client.setDeviceInternet("AA:BB:CC:DD:EE:FF", enabled = false))
+        server.takeRequest() // deviceList_manage
+        server.takeRequest() // tz_customer_code
+        assertEquals("/reqproc/proc_get?cmd=get_token&isTest=false", server.takeRequest().path)
+        val r = server.takeRequest()
+        assertEquals("POST", r.method)
+        assertEquals("/reqproc/proc_post", r.path)
+        val f = form(r.body.readUtf8())
+        assertEquals("ORANGE_SET_DEVICE_SWITCH", f["goformId"])
+        assertEquals("aa:bb:cc:dd:ee:ff", f["macAddress"])
+        assertEquals("0", f["enable"])
+        // sha256("abc")
+        assertEquals("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", f["CSRFToken"])
+    }
+
+    @Test fun setDeviceInternetReportsFailure() = runBlocking {
+        server.enqueue(MockResponse().setBody("""{"deviceList_manage":[]}"""))
+        server.enqueue(MockResponse().setBody("""{"tz_customer_code":"FR0296"}"""))
+        server.enqueue(MockResponse().setBody("""{"token":"abc"}"""))
+        server.enqueue(MockResponse().setBody("""{"result":"failure"}"""))
+        assertEquals(false, client.setDeviceInternet("AA:BB:CC:DD:EE:FF", enabled = true))
+    }
 }

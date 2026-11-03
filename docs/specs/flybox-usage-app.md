@@ -8,7 +8,7 @@ A standalone Android app (Kotlin, Jetpack Compose, no server of its own) used by
 
 ## Out of scope
 - Per-device usage for devices other than this phone when the router does not provide it (see AC-17 and AC-18); no traffic capture or extra hardware.
-- Controlling the router (blocking devices, changing Wi-Fi settings, SMS, USSD, top-up or purchase of plans).
+- Controlling the router beyond the per-device Internet switch (AC-19, AC-20): changing Wi-Fi settings, SMS, USSD, top-up or purchase of plans).
 - iOS, tablets in landscape, widgets, multi-router support, cloud sync, any backend or account on a remote server.
 - Reaching the router from outside the Flybox Wi-Fi.
 
@@ -40,6 +40,8 @@ A standalone Android app (Kotlin, Jetpack Compose, no server of its own) used by
 - AC-16: Given the permission is granted, when the Apps screen opens, then it lists this phone's apps ranked by data used (horizontal bars with app icon and name) for the selected period (today, 7 days, 30 days), with a note that the figures concern this phone only.
 - AC-17: Given the router returns per-device traffic (`AIRTEL_GET_DEVICE_INFO_TRAFFIC` non empty after login), when the Devices screen opens, then each device shows its data used and the list can be sorted by usage, with a share-of-total bar.
 - AC-18: Given the router returns no per-device traffic, when the Devices screen opens, then no per-device figure is shown and the screen says so once in a discreet note instead of showing zeros.
+- AC-19: Given the user is logged in to the router, when they turn off the "Internet" switch of an online device and confirm in the dialog, then the app sends `goformId=ORANGE_SET_DEVICE_SWITCH` with `macAddress` and `enable=0`, refreshes the list and shows the switch off (device blocked); turning it back on and confirming sends `enable=1`. Nothing is sent without that confirmation.
+- AC-20: Given the device is this phone (its Wi-Fi IP equals the device IP), then its switch is shown on and disabled, labelled "Internet (ce téléphone)", so the user cannot cut their own access to the router. A blocked offline known device (`enable=0`) is listed with the switch off, which can be turned on (`enable=1`).
 - AC-14: Given the app interface, then all text is in French, the theme is light, the font is Montserrat and the accent color is cobalt blue #2459D6.
 
 ## Error and edge cases
@@ -64,7 +66,7 @@ No project API: the app is the only client. The data-source contract is fixed he
 - Router (HTTP GET, no auth): `/reqproc/proc_get?cmd=system_status&isTest=false` returns JSON with string fields `uplink_traffic`, `downlink_traffic` (cumulative bytes), `uplink_rate`, `downlink_rate` (bytes/s), `online_time` (s), `network_type`, `rsrp`, `rssi`, `sinr`, `plmn`.
 - Router (needs session): `/reqproc/proc_get?cmd=deviceList_manage&isTest=false` returns `{"deviceList_manage":[{deviceName, macAddress, isOnline("1"/"0"), ip, enable, type}]}`; `cmd=station_list` returns `{"station_list":[{hostname, ip_addr, mac_addr, connect_time, dev_type}]}`.
 - Router login: `cmd=get_random_login` (GET) then a POST to `/reqproc/proc_post` with `goformId=LOGIN`; the exact credential encoding is to be confirmed (first task for the mobile agent, see open questions).
-- Router per-device traffic (needs session, may be empty on this firmware): `cmd=AIRTEL_GET_DEVICE_INFO_TRAFFIC` returns `{deviceList:[{index, ...}]}`; field names unknown until the router returns data. Possible activation by `goformId=AIRTEL_SET_UPDATE_TRAFFIC` (changes router settings: requires the user's explicit consent at the time, never done silently).
+- Router per-device traffic (needs session, may be empty on this firmware): `cmd=AIRTEL_GET_DEVICE_INFO_TRAFFIC` returns `{deviceList:[{index, ...}]}`; field names unknown until the router returns data. Per-device Internet switch (as the router web UI Devices screen): POST `goformId=ORANGE_SET_DEVICE_SWITCH`, `macAddress`, `enable` (`1` allowed, `0` blocked), answers `{"result":"success"}`. Every write must carry `CSRFToken` = SHA-256 (lowercase hex) of the token returned by `cmd=get_token` (`get_token_identity` for customer codes MA0553, EG0657_common_encryption, IO250013_common_encryption, CMR510_common_encryption), otherwise the router silently ignores it; the state is read back from `deviceList_manage[].enable`. Possible activation by `goformId=AIRTEL_SET_UPDATE_TRAFFIC` (changes router settings: requires the user's explicit consent at the time, never done silently).
 - Phone per-app usage: Android `NetworkStatsManager` (Wi-Fi and mobile), permission `PACKAGE_USAGE_STATS` granted by the user in system settings.
 - Orange page: GET `http://123.orange.mg/info-conso/`, parse the text pattern `<plan name> X Go sur Y Go valable jusqu'au dd/mm/yyyy` and the line `Le solde de votre compte de rechargement est de N Ar`.
 Reference implementation of parsing and prediction: the earlier Python prototype (`conso.py`, not part of this repository) (functions `collect_router`, `collect_orange`, `stats`).

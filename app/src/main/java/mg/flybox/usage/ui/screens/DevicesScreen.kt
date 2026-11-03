@@ -14,7 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +55,7 @@ fun DevicesScreen(
     onOpenSettings: () -> Unit,
     onRetry: () -> Unit,
     onToggleSort: () -> Unit,
+    onSetBlocked: (OnlineDevice?, String, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     when (ui) {
@@ -73,12 +78,23 @@ fun DevicesScreen(
             "Un autre utilisateur est connecté au routeur avec ce compte. Réessayez plus tard.",
             modifier,
         ) { PrimaryButton("Réessayer", onRetry) }
-        is DevicesUi.Ready -> DevicesList(ui, alwaysGo, onToggleSort, onRetry, modifier)
+        is DevicesUi.Ready -> DevicesList(ui, alwaysGo, onToggleSort, onRetry, onSetBlocked, modifier)
     }
 }
 
 @Composable
-private fun DevicesList(ui: DevicesUi.Ready, alwaysGo: Boolean, onToggleSort: () -> Unit, onRefresh: () -> Unit, modifier: Modifier) {
+private fun DevicesList(ui: DevicesUi.Ready, alwaysGo: Boolean, onToggleSort: () -> Unit, onRefresh: () -> Unit, onSetBlocked: (OnlineDevice?, String, Boolean) -> Unit, modifier: Modifier) {
+    var pending by remember { mutableStateOf<Triple<OnlineDevice?, String, Boolean>?>(null) }
+    pending?.let { (dev, mac, block) ->
+        val label = dev?.name ?: ui.lists.offline.firstOrNull { it.mac == mac }?.name ?: mac
+        AlertDialog(
+            onDismissRequest = { pending = null },
+            title = { Text(if (block) "Bloquer $label ?" else "Débloquer $label ?") },
+            text = { Text(if (block) "Cet appareil n'aura plus accès à Internet. Vous pourrez le rétablir ici." else "Cet appareil retrouvera l'accès à Internet.") },
+            confirmButton = { TextButton({ pending = null; onSetBlocked(dev, mac, block) }) { Text(if (block) "Bloquer" else "Débloquer") } },
+            dismissButton = { TextButton({ pending = null }) { Text("Annuler") } },
+        )
+    }
     val online: List<OnlineDevice> = if (ui.sortByUsage && ui.hasTraffic) {
         ui.lists.online.sortedByDescending { ui.traffic[it.mac] ?: -1L }
     } else ui.lists.online
@@ -93,10 +109,15 @@ private fun DevicesList(ui: DevicesUi.Ready, alwaysGo: Boolean, onToggleSort: ()
             Spacer(Modifier.weight(1f))
             TextAction("Actualiser", onRefresh)
         }
+        ui.notice?.let { Text(it, style = Type.Caption, color = Palette.InkSecondary) }
         if (ui.hasTraffic) TextAction(if (ui.sortByUsage) "Ordre du routeur" else "Trier par usage", onToggleSort)
         if (online.isEmpty()) Text("Aucun appareil en ligne pour le moment.", style = Type.Body, color = Palette.InkSecondary)
         online.forEach { d ->
-            OnlineRow(d, ui.traffic[d.mac], ui.totalTraffic, maxUse, ui.hasTraffic, alwaysGo)
+            OnlineRow(
+                d, ui.traffic[d.mac], ui.totalTraffic, maxUse, ui.hasTraffic, alwaysGo,
+                isSelf = d.ip.isNotEmpty() && d.ip == ui.ownIp, busy = ui.busyMac != null,
+                onToggle = { pending = Triple(d, d.mac, d.internetEnabled) },
+            )
             Hairline()
         }
         if (!ui.hasTraffic) {
@@ -108,7 +129,7 @@ private fun DevicesList(ui: DevicesUi.Ready, alwaysGo: Boolean, onToggleSort: ()
             val shown = if (expanded) groups else groups.take(OFFLINE_FOLDED)
             Spacer(Modifier.height(12.dp))
             Text("Hors ligne", style = Type.Section, color = Palette.InkSecondary)
-            shown.forEach { OfflineRow(it); Hairline() }
+            shown.forEach { g -> OfflineRow(g, busy = ui.busyMac != null, onUnblock = { pending = Triple(null, g.representative.mac, false) }); Hairline() }
             if (groups.size > OFFLINE_FOLDED) {
                 TextAction(if (expanded) "Réduire" else "Voir tout (${groups.size})", { expanded = !expanded })
             }
@@ -117,7 +138,7 @@ private fun DevicesList(ui: DevicesUi.Ready, alwaysGo: Boolean, onToggleSort: ()
 }
 
 @Composable
-private fun OnlineRow(d: OnlineDevice, bytes: Long?, total: Long, maxUse: Long, hasTraffic: Boolean, alwaysGo: Boolean) {
+private fun OnlineRow(d: OnlineDevice, bytes: Long?, total: Long, maxUse: Long, hasTraffic: Boolean, alwaysGo: Boolean, isSelf: Boolean, busy: Boolean, onToggle: () -> Unit) {
     Column(Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Glyph(GlyphKind.Device, Palette.Ink, 24)
@@ -132,6 +153,13 @@ private fun OnlineRow(d: OnlineDevice, bytes: Long?, total: Long, maxUse: Long, 
             Text("En ligne", style = Type.Caption, color = Palette.Green)
             d.connectedSeconds?.let { Text("connecté depuis ${Formats.duration(it)}", style = Type.Caption, color = Palette.InkSecondary) }
         }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                if (isSelf) "Internet (ce téléphone)" else "Internet",
+                style = Type.Caption, color = Palette.InkSecondary, modifier = Modifier.weight(1f),
+            )
+            InternetSwitch(d.internetEnabled, enabled = !isSelf && !busy, onToggle)
+        }
         if (hasTraffic && bytes != null && maxUse > 0) {
             HorizontalBar(bytes.toFloat() / maxUse, Palette.Brand)
             if (total > 0) Text("${(bytes * 100 / total)} % du total", style = Type.Caption, color = Palette.InkSecondary)
@@ -140,7 +168,7 @@ private fun OnlineRow(d: OnlineDevice, bytes: Long?, total: Long, maxUse: Long, 
 }
 
 @Composable
-private fun OfflineRow(g: OfflineGroup) {
+private fun OfflineRow(g: OfflineGroup, busy: Boolean, onUnblock: () -> Unit) {
     val d = g.representative
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp).padding(vertical = 8.dp),
@@ -151,7 +179,20 @@ private fun OfflineRow(g: OfflineGroup) {
             Text(g.name, style = Type.RowValue, color = Palette.InkSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(if (g.addressCount > 1) "${g.addressCount} adresses" else d.mac, style = Type.Caption, color = Palette.InkSecondary, maxLines = 1)
         }
+        if (!d.internetEnabled) InternetSwitch(false, enabled = !busy, onUnblock)
     }
+}
+
+/** Interrupteur Internet : actif = accès autorisé, inactif = appareil bloqué. Un appui demande confirmation. */
+@Composable
+private fun InternetSwitch(allowed: Boolean, enabled: Boolean, onToggle: () -> Unit) {
+    Switch(
+        checked = allowed, onCheckedChange = { onToggle() }, enabled = enabled,
+        colors = SwitchDefaults.colors(
+            checkedThumbColor = Palette.OnBrand, checkedTrackColor = Palette.Brand, checkedBorderColor = Palette.Brand,
+            uncheckedThumbColor = Palette.InkSecondary, uncheckedTrackColor = Palette.SurfaceMuted, uncheckedBorderColor = Palette.InkSecondary,
+        ),
+    )
 }
 
 private const val OFFLINE_FOLDED = 5

@@ -59,6 +59,8 @@ data class OnlineDevice(
     val ip: String,
     val mac: String,
     val connectedSeconds: Long?,
+    /** Faux si l'interrupteur Internet de l'appareil est coupé sur le routeur (appareil bloqué). */
+    val internetEnabled: Boolean = true,
 )
 
 data class KnownDevice(
@@ -66,6 +68,7 @@ data class KnownDevice(
     val mac: String,
     val ip: String,
     val online: Boolean,
+    val internetEnabled: Boolean = true,
 )
 
 /** Trafic par appareil (AC-17). Le total est en octets. */
