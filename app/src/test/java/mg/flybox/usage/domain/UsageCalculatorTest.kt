@@ -75,4 +75,20 @@ class UsageCalculatorTest {
     @Test fun startOfDay() {
         assertEquals(at(2026, 10, 28, 0, 0), UsageCalculator.startOfDayMillis(at(2026, 10, 28, 15, 30), zone))
     }
+
+    @Test fun transientLowReadingIsNotCountedAsResetPlusFullCounter() {
+        val rows = listOf(s(1, 1_000_000), s(2, 1_000_100), s(3, 5), s(4, 1_000_200))
+        assertEquals(200L, UsageCalculator.usageBetween(rows))
+    }
+
+    @Test fun realResetStillCounted() {
+        val rows = listOf(s(1, 1_000_000), s(2, 20), s(3, 80))
+        assertEquals(20L + 60L, UsageCalculator.usageBetween(rows))
+    }
+
+    @Test fun spikeWithInconsistentOnlineTimeIsIgnored() {
+        fun r(ts: Long, total: Long, online: Long) = Sample(ts = ts, down = total, up = 0, onlineTime = online)
+        val rows = listOf(r(1, 1_864_000, 333_000), r(2, 2_232_000, 230_000), r(3, 1_864_400, 334_000))
+        assertEquals(400L, UsageCalculator.usageBetween(rows))
+    }
 }

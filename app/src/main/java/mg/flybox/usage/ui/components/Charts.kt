@@ -359,10 +359,11 @@ fun ThroughputChart(points: List<RatePoint>, modifier: Modifier = Modifier) {
                 // Valeur finale dans la marge de droite, hors de la courbe.
                 val lbl = measurer.measure(lastLabel, Type.Caption.copy(color = Palette.AccentText))
                 drawText(lbl, topLeft = Offset(size.width - rightPx + 8.dp.toPx(), (yd[last] - lbl.size.height / 2f).coerceIn(0f, padT + h - lbl.size.height)))
-                // Axe du temps : début, milieu, fin.
-                listOf(0, last / 2, last).distinct().forEach { i ->
-                    val m = measurer.measure(timeFmt.format(java.util.Date(points[i].tsMillis)), Type.Caption.copy(color = Palette.InkSecondary))
-                    val x = (xs[i] - m.size.width / 2f).coerceIn(0f, size.width - m.size.width)
+                // Axe du temps : début, milieu, fin, positionnés à leur heure réelle.
+                listOf(0.0, 0.5, 1.0).forEach { f ->
+                    val t = (t0 + span * f).toLong()
+                    val m = measurer.measure(timeFmt.format(java.util.Date(t)), Type.Caption.copy(color = Palette.InkSecondary))
+                    val x = (x0 + (w * f).toFloat() - m.size.width / 2f).coerceIn(0f, size.width - m.size.width)
                     drawText(m, topLeft = Offset(x, padT + h + 4.dp.toPx()))
                 }
                 touch?.let { i ->
